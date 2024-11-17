@@ -42,7 +42,8 @@ def select_month(choice):
     st.session_state["month_choice"] = choice
 
  
-BASE_INVESTISSEMENT = st.text_input("Saisissez la valeur de base à investir: ", 0)
+BASE_INVESTISSEMENT = st.text_input("Saisissez la valeur de base à investir: ", 1000)
+#BASE_INVESTISSEMENT = st.slider("Saisissez la valeur de base à investir: ", min_value=0, max_value=1000000, value=0, step=50)
 
 if BASE_INVESTISSEMENT.isdigit():
     BASE_INVESTISSEMENT = int(BASE_INVESTISSEMENT)
@@ -73,10 +74,11 @@ if MONTH_CHOICE == 0:
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-NOMBRE_ANNEE =  st.text_input("Choisissez un nombre d'années a investir: ", 0)
-if NOMBRE_ANNEE.isdigit() and int(NOMBRE_ANNEE) > 1:
+#NOMBRE_ANNEE =  st.text_input("Choisissez un nombre d'années a investir: ", 0)
+NOMBRE_ANNEE = st.slider("Choisissez un nombre d'années a investir: ", min_value=1, max_value=50, value=1, step=1)
+if (NOMBRE_ANNEE) > 1:
      st.write(f"Vous voulez investir sur {NOMBRE_ANNEE} ans")    
-elif NOMBRE_ANNEE.isdigit() and int(NOMBRE_ANNEE) == 1:
+elif (NOMBRE_ANNEE) == 1:
     st.write(f"Vous voulez investir sur {NOMBRE_ANNEE} an")
 NOMBRE_ANNEE = int(NOMBRE_ANNEE)
 st.markdown("<hr>", unsafe_allow_html=True)
@@ -100,39 +102,62 @@ with right:
 
 INVEST = st.session_state["invest_choice"]
 FINAL_INVEST = ""
+IMPOSITION = 0
+FINAL_INVEST = BASE_INVESTISSEMENT
 
 if INVEST == 1 and MONTH_CHOICE == 1:
+
     BASE_RESULT = BASE_INVESTISSEMENT * (1 + APY_MOYEN) ** NOMBRE_ANNEE
     MONTH_RESULT = 0
+
     for i in range(1, NOMBRE_ANNEE * 12 + 1):
         REMANING_MONTHS = (NOMBRE_ANNEE * 12) - i 
         MONTH_RESULT += MONTH_PRICE*(1 + APY_MOYEN / 12) ** REMANING_MONTHS
+        MONTH_IMP = MONTH_PRICE * i
+
         FINAL_INVEST = BASE_INVESTISSEMENT + (MONTH_PRICE*i)
+
     RESULT = BASE_RESULT + MONTH_RESULT
+    IMPOSITION = RESULT - (BASE_INVESTISSEMENT + MONTH_IMP)
 
 
 
 
 elif INVEST == 1 and MONTH_CHOICE == 0:
     RESULT = BASE_INVESTISSEMENT*((1 + APY_MOYEN) ** NOMBRE_ANNEE)
+    IMPOSITION = RESULT - BASE_INVESTISSEMENT
 
 
 
 elif INVEST == 0 and MONTH_CHOICE == 0:
     RESULT = BASE_INVESTISSEMENT + ((APY_MOYEN * BASE_INVESTISSEMENT) * NOMBRE_ANNEE)
+    IMPOSITION = RESULT - BASE_INVESTISSEMENT
 
 
 
 elif INVEST == 0 and MONTH_CHOICE == 1:
+
     BASE_RESULT = BASE_INVESTISSEMENT * (1 + APY_MOYEN * NOMBRE_ANNEE)
     MONTH_RESULT = 0
+
     for i in range(1, NOMBRE_ANNEE * 12 + 1):
+
         REMANING_MONTHS = (NOMBRE_ANNEE * 12) - i
-        MONTH_RESULT += MONTH_PRICE * (1 + APY_MOYEN / 12) ** REMANING_MONTHS
+        MONTH_RESULT += MONTH_PRICE * (1 + APY_MOYEN / 12) ** REMANING_MONTHS        
+        MONTH_IMP = MONTH_PRICE * i
+
         FINAL_INVEST = BASE_INVESTISSEMENT + (MONTH_PRICE*i)
+
     RESULT = BASE_RESULT + MONTH_RESULT
+    IMPOSITION = RESULT - (BASE_INVESTISSEMENT + MONTH_IMP)
 
-st.markdown(f"<h2 style='font-size: 22px; font-weight: bold;'>Vous allez obtenir {round(RESULT, 2)}€ au bout de {NOMBRE_ANNEE} ans</h2>", unsafe_allow_html=True)
+MARGE = IMPOSITION * 0.7
+IMPOSITION = IMPOSITION * 0.3
+IMPOSITION = RESULT - IMPOSITION
 
-if MONTH_CHOICE == 1:
-    st.markdown(f"<h2 style='font-size: 22px; font-weight: bold;'>Et vous aurez investis: {FINAL_INVEST}€ </h2>", unsafe_allow_html=True)
+st.markdown(f"<h2 style='font-size: 22px; font-weight: bold;'>Vous obtiendrez {round(RESULT, 2)}€ brut au bout de {NOMBRE_ANNEE} ans <br> Vous avez investis: {FINAL_INVEST}€</h2>", unsafe_allow_html=True)
+
+
+#st.markdown(f"<h2 style='font-size: 22px; font-weight: bold;'>Et vous aurez investis: {FINAL_INVEST}€ </h2>", unsafe_allow_html=True)
+
+st.markdown(f"<h1 style='font-size: 22px; font-weight: bold;'>Votre net approximatif (30% d'imposition) sera égal à: {round(IMPOSITION, 2)}€ <br> Soit un total de {round(MARGE, 2)}€ de gains.</h1>", unsafe_allow_html=True)
